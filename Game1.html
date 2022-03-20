@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <style>
+#gameName {
+  border-radius: 10px;
+  text-align: center;
+  width: 340px;
+  color: white;
+  font-family: Cursive;
+  font-size: 45px;
+  position: fixed;
+  top:50px;
+}
+#cnvs{
+    margin-left: auto;
+    margin-right: auto;
+    margin-top:70px;
+    background: radial-gradient(white,grey);
+    z-index: 1;
+}
+#modeSelector{
+    color: white;
+    background:linear-gradient(magenta,purple);
+    top: 190px;
+}
+#startButton{
+  padding: 10px;
+  padding-left: 50px;
+  padding-right: 50px;
+  background-color: green;
+  color: white;
+  border: 1px solid black;
+  border-radius: 50%;
+  top:350px;
+}
+#restartButton{
+  padding: 10px;
+  padding-left: 30px;
+  padding-right: 30px;
+  display: none;
+  background-color: green;
+  border-radius: 50%;
+  color: white;
+  top: 350px;
+}
+#messenger{
+  display: none;
+  background-color: orange;
+  color: white;
+  padding-left: 30px;
+  padding-right: 30px;
+  border-radius: 10%;
+  top:100px;
+  font-size: 40px;
+}
+#labelForDif{
+  display:inline-block;
+  color: white;
+  background-color: orange;
+  padding: 10px;
+  padding-left: 50px;
+  padding-right: 50px;
+  border-radius: 25%;
+  top:140px;
+}
+#labelForToken{
+  display:inline-block;
+  color: white;
+  background-color: orange;
+  padding: 10px;
+  padding-left: 50px;
+  padding-right: 50px;
+  top: 250px;
+  border-radius: 50%;
+}
+#tokeX{
+  top:245px;
+  font-size: 40px;
+  font-family: Tahoma;
+  color: green;
+}
+#tokenO{
+  top:240px;
+  font-size: 43px;
+  font-family: Tahoma;
+  color: red;
+}
+#passMove {
+  top:130px;
+  background-color: transparent;
+  border-radius: 2px;
+  display: none;
+}
+#notifierForFirstMove {
+  top:80px;
+  display:none;
+}
+
+.flex-container{
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  
+}
+.OCircle{
+  background-color: black;
+  border: 2px solid white;
+  border-radius: 50%;
+  width: 25px;
+  height: 25px;
+  display:inline-block;
+}
+label, h1, select, button, p {
+  z-index : 2;
+  font-size: 20px;
+  position: absolute;
+}
+button, select {
+  outline: none;
+}
+    </style>
+        <title>Tic Tac Toe</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body bgcolor="black">
+      
+<div class = "flex-container">
+<label id="labelForDif" for="modeSelector">Choose Difficulty</label>
+<select name='modeList' id='modeSelector' >
+<option value="easy">Easy</option>
+<option value='normal'>Normal </option>
+<option value='hard'>Hard </option>
+<option value="vsPlayer">Play with another player</option>
+    </select>
+  
+<button id="startButton" onclick="startGame()">Start Game</button>
+<button id="restartButton" onclick="startGame()">Restart</button>
+<h1 id="messenger"></h1>
+
+<label id="labelForToken">Choose Your Token</label>
+<p id="tokeX">x</p>
+<p id="tokenO">o</p>
+
+<p id="notifierForFirstMove" >You got the first move!</p>
+<h1 id="gameName">Tic Tac Toe</h1>
+<button id="passMove">Pass</button>
+
+ </div>
+ <div class="flex-container">
+    <canvas id="cnvs" width= 340 height = 500 ></canvas>
+</div>
+<audio id="clickSound" src="/assets/click.wav"> </audio>
+ 
+    <script>
+ var cnvs = document.getElementById("cnvs");
+ var ctx = cnvs.getContext("2d");
+ var cds = {
+   X: 135,
+   Y: 200,
+   W: 75,
+   H: 75,
+   p: 10, //padding
+}
+var startButton = document.getElementById("startButton");
+var restartButton = document.getElementById("restartButton");
+var modeSelector = document.getElementById("modeSelector");
+var labels = document.getElementsByTagName("label");
+var messenger = document.getElementById("messenger");
+var tokenX = document.getElementById("tokeX");
+var tokenO = document.getElementById("tokenO");
+var clickSound = document.getElementById("clickSound");
+var passMove = document.getElementById("passMove");
+var notifierForFirstMove = document.getElementById("notifierForFirstMove");
+
+tokenX.style.left = cnvs.offsetLeft + 120 + "px";
+tokenO.style.left = cnvs.offsetLeft + cnvs.width - 150 + "px";
+var xIsDrawn = false;
+var playersTokenIsX = true;
+var itsPlayersMove = true;
+
+passMove.onclick = function () {
+  cnvs.removeEventListener('click',detectTouchAndResponse);
+  passMove.style.display = "none";
+  notifierForFirstMove.style.display = "none";
+  
+  if (playersTokenIsX) {
+     xIsDrawn = true;
+   } else {
+     xIsDrawn = false;
+   }
+  if (mode == "hard") {
+   setTimeout(executeMasterAlgorithm,500);
+} else if (mode == "easy") {
+  setTimeout(takeRandomMoves,500);
+  itsPlayersMove = true;
+} else if (mode == "normal") {
+  if (Math.random() < 0.5) {
+  setTimeout(takeRandomMoves,500);
+  itsPlayersMove = true;
+  } else {
+  setTimeout(executeMasterAlgorithm,500);
+  itsPlayersMove = true;
+  }
+}
+}
+
+tokenX.onclick = function xClickCheck() {
+  xIsDrawn = false;
+  playersTokenIsX = true;
+  clickSound.play();
+  tokenX.style.color = "green";
+  tokenO.style.color = "red";
+}
+tokenO.onclick = function oClickCheck() {
+  xIsDrawn = true;
+  playersTokenIsX = false;
+  clickSound.play();
+  tokenO.style.color = "green";
+  tokenX.style.color = "red";
+}
+
+
+
+
+
+function startGame() {
+   if (playersTokenIsX) {
+     xIsDrawn = false;
+   } else {
+     xIsDrawn = true;
+   }
+   
+   drawArena();
+   createBoxes();
+   cnvs.addEventListener('click',detectTouchAndResponse);
+   
+   startButton.style.display = "none";
+   restartButton.style.display = "none";
+   moveCounter = 0;
+   for (let i=0;i<labels.length;i++) {
+     labels[i].style.display = "none";
+   }
+   modeSelector.style.display = "none";
+   messenger.style.display = "none";
+   tokenX.style.display = "none";
+   tokenO.style.display = "none";
+   tokenX.style.top = "30px";
+   tokenO.style.top = "25px";
+   document.getElementById("gameName").style.display = "none";
+   
+   mode = document.getElementById("modeSelector").value;
+   if (mode != "vsPlayer") {
+   passMove.style.display = "inline-block";
+   notifierForFirstMove.style.display = "inline-block";
+   }
+}
+    
+function drawArena () {
+ctx.clearRect(0,0,cnvs.width,cnvs.height);
+ctx.beginPath();
+ctx.lineWidth = 2;
+ctx.moveTo(135,125);
+ctx.lineTo(135,350);
+ctx.stroke();
+ctx.moveTo(210,125);
+ctx.lineTo(210,350);
+ctx.stroke();
+ctx.moveTo(60,200);
+ctx.lineTo(285,200);
+ctx.stroke();
+ctx.moveTo(60,275);
+ctx.lineTo(285,275);
+ctx.stroke();
+
+}
+
+
+function createBoxes() {
+  class Box {
+  constructor(x1,y1,x2,y2) {
+  this.x1 = x1;
+  this.y1 = y1;
+  this.x2 = x2;
+  this.y2 = y2;
+  this.isFilled = false;
+  this.gotO = false;
+  this.gotX = false;
+}
+}
+   box = [];
+   var x = cds.X - cds.W;
+   var y = cds.Y - cds.H;
+   var s = cds.W;
+ for (let c=0;c<3;c++){
+     box[c] = [];
+   for (let r=0;r<3;r++) {
+     box[c][r]= new Box(x+(s*c),y+(s*r),x+s+(s*c),y+s+(s*r));
+   }
+  }
+ }
+ 
+ function detectTouchAndResponse(event) {
+ var tx = event.offsetX;
+ var ty = event.offsetY;
+ for (let i=0;i<3;i++) {
+   for(let j=0;j<3;j++) {
+     var obj = box[i][j];
+   if ((obj.x1<tx) && (obj.x2>tx) && (obj.y1<ty) && (obj.y2>ty)) {
+   cnvs.removeEventListener('click',detectTouchAndResponse);
+   itsPlayersMove = false;
+   drawToken(obj);
+   if (mode != "vsPlayer") {
+   passMove.style.display = "none";
+   notifierForFirstMove.style.display = "none";
+    }
+   }
+  }
+ }
+}
+function detectGameResult() {
+ var xWon = null;
+ var winner = undefined;
+ winnerIsHere = false;
+ for (let c=0;c<3;c++){
+ if ((box[c][0].gotX&&box[c][1].gotX&&box[c][2].gotX) || (box[0][c].gotX&&box[1][c].gotX&&box[2][c].gotX)){
+     xWon = true;
+   } 
+ }
+ if ((box[0][0].gotX&&box[1][1].gotX&&box[2][2].gotX) || (box[0][2].gotX&&box[1][1].gotX&&box[2][0].gotX)){
+     xWon = true;
+ } 
+ for (let d=0;d<3;d++){
+ if ((box[d][0].gotO&&box[d][1].gotO&&box[d][2].gotO) || (box[0][d].gotO&&box[1][d].gotO&&box[2][d].gotO)){
+     xWon = false;
+   } 
+ }
+ if ((box[0][0].gotO&&box[1][1].gotO&&box[2][2].gotO) || (box[0][2].gotO&&box[1][1].gotO&&box[2][0].gotO)){
+     xWon = false;
+ } 
+ else if ((moveCounter == 9) && (xWon == null)) {
+   winner = "Draw!!";
+ }
+   switch (xWon) {
+   case true:
+     winner = "X Won!";
+     break;
+   case false:
+     winner = "O Won!";
+     break;
+   }
+  
+  if (winner != undefined) {
+    if (mode != "vsPlayer"  && winner != "Draw!!") {
+     if (playersTokenIsX && xWon) {
+      winner = "You Won!";
+     } else if (!playersTokenIsX && !xWon) {
+      winner = "You Won!";
+     } else {
+       winner = "You Lost!";
+     }
+   }
+   document.getElementById("messenger").innerHTML = winner;
+   messenger.style.display = "inline-block";
+   restartButton.style.display = "inline-block";
+   modeSelector.style.display = "inline-block";
+   tokenX.style.display = "inline-block";
+   tokenO.style.display = "inline-block";
+   cnvs.removeEventListener('click',detectTouchAndResponse);
+   winnerIsHere = true;
+}
+}
+
+function drawToken(obj) {
+  var xx1 = obj.x1;
+  var yy1 = obj.y1;
+  var xx2 = obj.x2;
+  var yy2 = obj.y2;
+  var isFilled = obj.isFilled;
+  
+if (!isFilled) {
+  if (!xIsDrawn) {
+    drawX(xx1,yy1,xx2,yy2);
+    obj.gotX = true;
+  } else {
+    drawO(xx1,yy1,xx2,yy2);
+    obj.gotO = true;
+  }
+  obj.isFilled = true;
+  if (!itsPlayersMove && mode == "hard") {
+  setTimeout(executeMasterAlgorithm,500);
+  itsPlayersMove = true;
+} else if (!itsPlayersMove && mode == "easy") {
+  setTimeout(takeRandomMoves,500);
+  itsPlayersMove = true;
+} else if (!itsPlayersMove && mode == "normal") {
+  if (Math.random() < 0.5) {
+  setTimeout(takeRandomMoves,500);
+  itsPlayersMove = true;
+  } else {
+  setTimeout(executeMasterAlgorithm,500);
+  itsPlayersMove = true;
+  }
+}
+}
+  
+function drawX(x1,y1,x2,y2) {
+  ctx.beginPath();
+  ctx.lineWidth=3;
+  var q = 55;
+  
+  var nz = setInterval(dwX,20);
+  function dwX() {
+  ctx.beginPath();
+  ctx.clearRect(x1+cds.p,y1+cds.p,cds.W-2*cds.p,cds.H-2*cds.p);
+  ctx.moveTo(x1+q+cds.p,y1+q+cds.p);
+  ctx.lineTo(x2-cds.p,y2-cds.p);
+  ctx.moveTo(x2-q-cds.p,y1+q+cds.p);
+  ctx.lineTo(x1+cds.p,y2-cds.p);
+  ctx.stroke();
+  ctx.closePath();
+  q -= 5;
+  if (q == -5) {
+    clearInterval(nz);
+  }
+  }
+  xIsDrawn = true;
+  moveCounter++;
+}
+function drawO(x1,y1,x2,y2) {
+  ctx.beginPath();
+  ctx.lineWidth = 3;
+  var centreX = x1 + 37.5;
+  var centreY = y1 + 37.5;
+  var theta = 0;
+ var dz = setInterval(dwO,20);
+  function dwO() {
+  ctx.beginPath();
+  ctx.clearRect(centreX-34.5,centreY-34.5,66,66);
+  ctx.arc(centreX,centreY,30,0,theta);
+  ctx.stroke();
+  theta += 0.1 * Math.PI;
+  if (theta == 2.1 * Math.PI) {
+    clearInterval(dz);
+  }
+  }
+  xIsDrawn = false;
+  moveCounter++;
+}
+setTimeout(detectGameResult,500);
+setTimeout( function () { 
+  cnvs.addEventListener('click',detectTouchAndResponse)
+},1000);
+
+}
+
+function executeMasterAlgorithm() {
+ var presentMove = moveCounter;
+ runSpecialMoves();
+ if (moveCounter > 2 && presentMove == moveCounter) {
+  takeYourMove();
+ };
+ if (presentMove == moveCounter && !winnerIsHere) {
+    blockPlayer();
+  }
+ if (presentMove == moveCounter) {
+    takeRandomMoves();
+ }
+  
+   function takeYourMove() {
+   for (let c=0;c<3;c++){
+
+   switch (cbm(c,0,c,1,c,2)) {
+     case "1,1,0":
+       drawToken(box[c][2]);
+     return;
+     case "1,0,1":
+       drawToken(box[c][1]);;
+     return;
+     case "0,1,1":
+       drawToken(box[c][0]);
+     return;
+   }
+  
+   switch (cbm(0,c,1,c,2,c)) {
+     case "1,1,0":
+       drawToken(box[2][c]);
+     return;
+     case "1,0,1":
+       drawToken(box[1][c]);;
+     return;
+     case "0,1,1":
+       drawToken(box[0][c]);
+     return;
+   }
+  
+ }
+ 
+ switch (cbm(0,0,1,1,2,2)) {
+     case "1,1,0":
+       drawToken(box[2][2]);
+     return;
+     case "1,0,1":
+       drawToken(box[1][1]);;
+     return;
+     case "0,1,1":
+       drawToken(box[0][0]);
+     return;
+   }
+
+ switch (cbm(0,2,1,1,2,0)) {
+     case "1,1,0":
+       drawToken(box[2][0]);
+     return;
+     case "1,0,1":
+       drawToken(box[1][1]);;
+     return;
+     case "0,1,1":
+       drawToken(box[0][2]);
+     return;
+   }     
+   }
+   
+ function blockPlayer() {   
+ for (let c=0;c<3;c++){
+   
+   switch (cpm(c,0,c,1,c,2)) {
+     case "1,1,0":
+       drawToken(box[c][2]);
+     return;
+     case "1,0,1":
+       drawToken(box[c][1]);
+     return;
+     case "0,1,1":
+       drawToken(box[c][0]);
+     return;
+   }
+  
+   switch (cpm(0,c,1,c,2,c)) {
+     case "1,1,0":
+       drawToken(box[2][c]);
+     return;
+     case "1,0,1":
+       drawToken(box[1][c]);
+     return;
+     case "0,1,1":
+       drawToken(box[0][c]);
+     return;
+   }
+  
+ }
+ 
+ switch (cpm(0,0,1,1,2,2)) {
+     case "1,1,0":
+       drawToken(box[2][2]);
+     return;
+     case "1,0,1":
+       drawToken(box[1][1]);
+     return;
+     case "0,1,1":
+       drawToken(box[0][0]);
+     return;
+   }
+
+ switch (cpm(0,2,1,1,2,0)) {
+     case "1,1,0":
+       drawToken(box[2][0]);
+     return;
+     case "1,0,1":
+       drawToken(box[1][1]);
+     return;
+     case "0,1,1":
+       drawToken(box[0][2]);
+     return;
+   }
+  }
+  function runSpecialMoves() {
+
+   if ((moveCounter == 1) && !xcpm(1,1)) {
+     drawToken(box[1][1]);
+   } else if ((moveCounter == 1) && xcpm(1,1)) {
+     drawToken(box[0][0]);
+   } else if (moveCounter == 3 && xcpm(0,0) && xcpm(2,2)) {
+     drawToken(box[0][1]);
+   } else if (moveCounter == 3 && xcpm(0,2) && xcpm(2,0)) {
+     drawToken(box[0][1]);
+   } else if (moveCounter == 0) {
+       drawToken(box[0][0]);
+   } else if (moveCounter == 2 && !xcpm(1,1)) {
+     drawToken(box[1][1]);
+   } else if (moveCounter == 2 && xcpm(1,1)) {
+     drawToken(box[2][2]);
+   } 
+   switch (cbm(0,0,0,2,2,2) + (+xcbm(2,0))) {
+   case "1,1,10":
+   case "1,1,01":
+     drawToken(box[0][1]);
+     break;
+   case "1,0,11":
+   case "0,1,11":
+     drawToken(box[2][1]);
+     break;
+   }
+  }
+}
+
+function cpm(j,k,l,m,n,o) {
+  if (playersTokenIsX) {
+    return [+box[j][k].gotX, +box[l][m].gotX, +box[n][o].gotX].toString();
+  } else {
+    return [+box[j][k].gotO, +box[l][m].gotO, +box[n][o].gotO].toString();
+  }
+}
+function xcpm(j,k) {
+  if (playersTokenIsX) {
+    return box[j][k].gotX;
+    } else {
+    return box[j][k].gotO;
+    }
+}
+function cbm(j,k,l,m,n,o) {
+  if (!playersTokenIsX) {
+    return [+box[j][k].gotX, +box[l][m].gotX, +box[n][o].gotX].toString();
+  } else {
+    return [+box[j][k].gotO, +box[l][m].gotO, +box[n][o].gotO].toString();
+  }
+}
+function xcbm(j,k) {
+  if (!playersTokenIsX) {
+    return box[j][k].gotX;
+    } else {
+    return box[j][k].gotO;
+    }
+}
+function takeRandomMoves() {
+ var unfilledBoxes = [];
+  for (let c=0;c<3;c++) {
+    for (let r=0;r<3;r++) {
+      if (!box[c][r].isFilled) {
+        unfilledBoxes.push(box[c][r]);
+      }
+    }
+  }
+  var rNo = Math.floor(Math.random() * (unfilledBoxes.length-1));
+  drawToken(unfilledBoxes[rNo]);
+}
+</script>
+    </body>
+</html>
